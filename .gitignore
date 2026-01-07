@@ -30,11 +30,9 @@ wheels/
 # Data files
 data/*.csv
 data/*.zip
-*.csv
-*.zip
 
-# Models
-models/*.pkl
+# Models - Garder les .pkl pour le déploiement
+# models/*.pkl
 models/*.h5
 models/*.joblib
 
