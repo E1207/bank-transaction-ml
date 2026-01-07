@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
 
 export interface PredictionRequest {
   features: number[];
@@ -43,9 +42,17 @@ export interface HealthStatus {
   providedIn: 'root'
 })
 export class ApiService {
-  private apiUrl = environment.apiUrl;
+  private apiUrl: string;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    // Détection automatique : localhost = dev, sinon = production
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      this.apiUrl = 'http://localhost:5001';
+    } else {
+      this.apiUrl = 'https://credit-score-api-62r0.onrender.com';
+    }
+    console.log('API URL:', this.apiUrl);
+  }
 
   getHealth(): Observable<HealthStatus> {
     return this.http.get<HealthStatus>(`${this.apiUrl}/health`);
