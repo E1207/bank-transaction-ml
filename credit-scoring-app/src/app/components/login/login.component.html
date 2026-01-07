@@ -1,0 +1,114 @@
+<div class="login-container">
+  <!-- Background decoration -->
+  <div class="background-decoration">
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+    <div class="circle circle-3"></div>
+    <div class="circle circle-4"></div>
+  </div>
+
+  <div class="login-card">
+    <!-- Header -->
+    <div class="login-header">
+      <div class="logo">🏦</div>
+      <h1>Credit Scoring Pro</h1>
+      <p class="subtitle">Plateforme d'évaluation intelligente</p>
+    </div>
+
+    <!-- Login Form -->
+    <form (ngSubmit)="login()" class="login-form">
+      <!-- Username -->
+      <div class="form-group">
+        <label for="username">
+          <span class="icon">👤</span>
+          Identifiant
+        </label>
+        <div class="input-wrapper">
+          <input
+            type="text"
+            id="username"
+            [(ngModel)]="username"
+            name="username"
+            placeholder="Entrez votre identifiant"
+            [disabled]="loading"
+            autocomplete="username"
+            required
+          />
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="password">
+          <span class="icon">🔐</span>
+          Mot de passe
+        </label>
+        <div class="input-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="Entrez votre mot de passe"
+            [disabled]="loading"
+            autocomplete="current-password"
+            required
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePasswordVisibility()"
+            [disabled]="loading"
+            tabindex="-1"
+          >
+            {{ showPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Remember & Forgot -->
+      <div class="remember-row">
+        <label class="checkbox-wrapper">
+          <input type="checkbox" />
+          <span>Se souvenir de moi</span>
+        </label>
+        <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+      </div>
+
+      <!-- Error Message -->
+      <div class="error-message" *ngIf="error">
+        {{ error }}
+      </div>
+
+      <!-- Login Button -->
+      <button type="submit" class="btn-login" [disabled]="loading" [class.loading]="loading">
+        <span>
+          <ng-container *ngIf="!loading">🚀 Se connecter</ng-container>
+          <ng-container *ngIf="loading">⏳ Connexion...</ng-container>
+        </span>
+      </button>
+
+      <!-- Divider -->
+      <div class="divider">
+        <span>Mode démo</span>
+      </div>
+
+      <!-- Demo Credentials -->
+      <div class="demo-credentials">
+        <p>Utilisez les identifiants de test</p>
+        <div class="credentials">
+          <code><strong>ID:</strong> gestionnaire</code>
+          <code><strong>MDP:</strong> santander123</code>
+        </div>
+        <button type="button" class="btn-autofill" (click)="fillTestCredentials()" [disabled]="loading">
+          ✨ Remplir automatiquement
+        </button>
+      </div>
+    </form>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <p>© 2026 Credit Scoring Pro • <a href="#">Mentions légales</a></p>
+    </div>
+  </div>
+</div>

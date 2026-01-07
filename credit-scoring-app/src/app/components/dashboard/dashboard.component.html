@@ -1,0 +1,370 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-icon">🏦</span>
+      <h1>Credit Scoring Pro</h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn-history" (click)="goToHistory()" *ngIf="currentStep !== 'history'">
+        📚 Historique
+      </button>
+      <div class="user-info">
+        <span>{{ currentUser?.username }}</span>
+        <button class="btn-logout" (click)="logout()">
+          🚪 Déconnexion
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Progress bar -->
+  <div class="progress-container" *ngIf="currentStep === 'questions'">
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="progress"></div>
+    </div>
+    <span class="progress-text">
+      {{ getCategoryIcon(currentCategory) }} {{ currentCategory }} — Étape {{ currentCategoryIndex + 1 }} sur {{ categories.length }}
+    </span>
+  </div>
+
+  <!-- ==================== STEP 1: Client Info ==================== -->
+  <div class="step-container" *ngIf="currentStep === 'info'">
+    <div class="card">
+      <h2>📋 Nouveau dossier client</h2>
+      <p class="subtitle">Renseignez les informations du demandeur pour commencer l'analyse</p>
+      
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="name">Nom <span class="required">*</span></label>
+          <input type="text" id="name" [(ngModel)]="clientProfile.name" 
+                 placeholder="ex: Dupont" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="firstName">Prénom <span class="required">*</span></label>
+          <input type="text" id="firstName" [(ngModel)]="clientProfile.firstName" 
+                 placeholder="ex: Jean" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="phone">📱 Téléphone</label>
+          <input type="tel" id="phone" [(ngModel)]="clientProfile.phone" 
+                 placeholder="ex: 06 12 34 56 78">
+        </div>
+        
+        <div class="form-group">
+          <label for="email">📧 Email</label>
+          <input type="email" id="email" [(ngModel)]="clientProfile.email" 
+                 placeholder="ex: jean.dupont@email.com">
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button class="btn-primary" (click)="goToQuestions()">
+          🚀 Démarrer l'analyse
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 2: Questions by Category ==================== -->
+  <div class="step-container" *ngIf="currentStep === 'questions'">
+    <div class="card">
+      <h2>{{ getCategoryIcon(currentCategory) }} {{ currentCategory }}</h2>
+      
+      <div class="questions-list">
+        <div class="question-item" *ngFor="let q of currentQuestions; let i = index">
+          <div class="question-header">
+            <label [for]="q.id">{{ q.question }}</label>
+            <button class="btn-info" (click)="toggleExplanation(q.id)" 
+                    [class.active]="showExplanation === q.id"
+                    title="Plus d'informations">
+              💡
+            </button>
+          </div>
+          
+          <!-- Explanation tooltip -->
+          <div class="explanation-box" *ngIf="showExplanation === q.id">
+            <p>{{ q.explanation }}</p>
+          </div>
+          
+          <!-- Input based on type -->
+          <div class="input-wrapper">
+            <!-- Number input -->
+            <ng-container *ngIf="q.type === 'number'">
+              <div class="number-input">
+                <input type="number" [id]="q.id"
+                       [(ngModel)]="answers[q.id]"
+                       [attr.min]="q.min ?? 0" 
+                       [attr.max]="q.max ?? 100" 
+                       [attr.step]="q.step ?? 1"
+                       [placeholder]="'Entrez une valeur'">
+                <span class="unit" *ngIf="q.unit">{{ q.unit }}</span>
+                <span class="suffix" *ngIf="q.suffix">{{ q.suffix }}</span>
+              </div>
+              <div class="range-hint">
+                📊 Plage : {{ q.min ?? 0 }}{{ q.unit }} — {{ q.max ?? 100 }}{{ q.unit }}
+              </div>
+            </ng-container>
+            
+            <!-- Select dropdown -->
+            <ng-container *ngIf="q.type === 'select'">
+              <select [id]="q.id" [(ngModel)]="answers[q.id]">
+                <option [ngValue]="null" disabled>— Sélectionnez une option —</option>
+                <option *ngFor="let opt of q.options" [ngValue]="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="previousCategory()" 
+                *ngIf="currentCategoryIndex > 0">
+          ← Précédent
+        </button>
+        <button class="btn-secondary" (click)="backToInfo()" 
+                *ngIf="currentCategoryIndex === 0">
+          ← Retour
+        </button>
+        <button class="btn-primary" (click)="nextCategory()">
+          {{ currentCategoryIndex < categories.length - 1 ? 'Continuer →' : '🎯 Analyser le dossier' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 3: Results ==================== -->
+  <div class="step-container results" *ngIf="currentStep === 'results' && result">
+    
+    <!-- Main Decision Card -->
+    <div class="card result-card" [class]="getDecisionClass()">
+      <div class="result-header">
+        <h2>{{ getDecisionLabel() }}</h2>
+        <div class="client-name">
+          👤 {{ clientProfile.firstName }} {{ clientProfile.name }}
+        </div>
+      </div>
+      
+      <div class="score-display">
+        <div class="score-circle" [class]="getScoreClass()">
+          <span class="score-value">{{ result.score }}</span>
+          <span class="score-max">/100</span>
+        </div>
+        <div class="score-label">Score de solvabilité</div>
+        <div class="threshold-info">🎯 Seuil d'acceptation : {{ threshold }}/100</div>
+      </div>
+    </div>
+
+    <!-- Financial Metrics -->
+    <div class="card metrics-card">
+      <h3>📊 Indicateurs financiers clés</h3>
+      <div class="metrics-grid">
+        <div class="metric" 
+             [class.warning]="result.tauxEndettement > 33" 
+             [class.danger]="result.tauxEndettement > 40">
+          <span class="metric-value">{{ result.tauxEndettement }}%</span>
+          <span class="metric-label">Taux d'endettement</span>
+          <span class="metric-hint">Limite légale : 35%</span>
+        </div>
+        <div class="metric" 
+             [class.warning]="result.resteAVivre < 800" 
+             [class.danger]="result.resteAVivre < 500">
+          <span class="metric-value">{{ result.resteAVivre | number:'1.0-0' }} €</span>
+          <span class="metric-label">Reste à vivre</span>
+          <span class="metric-hint">Après toutes charges</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Details -->
+    <div class="card details-card">
+      <h3>📈 Analyse par catégorie</h3>
+      <div class="category-scores">
+        <div class="category-score" *ngFor="let detail of result.details">
+          <div class="category-info">
+            <span class="category-icon">{{ getCategoryIcon(detail.category) }}</span>
+            <span class="category-name">{{ detail.category }}</span>
+          </div>
+          <div class="category-bar">
+            <div class="category-fill" 
+                 [style.width.%]="(detail.points / detail.maxPoints) * 100"
+                 [class.good]="detail.points / detail.maxPoints >= 0.7"
+                 [class.medium]="detail.points / detail.maxPoints >= 0.4 && detail.points / detail.maxPoints < 0.7"
+                 [class.bad]="detail.points / detail.maxPoints < 0.4">
+            </div>
+          </div>
+          <span class="category-score-text">
+            {{ detail.points | number:'1.1-1' }}/{{ detail.maxPoints }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts if any -->
+    <div class="card alerts-card" *ngIf="result.motifs.length > 0">
+      <h3>⚠️ Points d'attention</h3>
+      <ul class="alerts-list">
+        <li *ngFor="let motif of result.motifs">{{ motif }}</li>
+      </ul>
+    </div>
+
+    <!-- Actions -->
+    <div class="result-actions">
+      <button class="btn-primary" (click)="newAnalysis()">
+        ✨ Nouvelle analyse
+      </button>
+      <button class="btn-secondary" onclick="window.print()">
+        🖨️ Imprimer le rapport
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== STEP 4: History ==================== -->
+  <div class="step-container history-view" *ngIf="currentStep === 'history'">
+    
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card stat-total">
+        <span class="stat-value">{{ historyStats.total }}</span>
+        <span class="stat-label">Simulations</span>
+      </div>
+      <div class="stat-card stat-accepted">
+        <span class="stat-value">{{ historyStats.accepted }}</span>
+        <span class="stat-label">Accordés</span>
+      </div>
+      <div class="stat-card stat-refused">
+        <span class="stat-value">{{ historyStats.refused }}</span>
+        <span class="stat-label">Refusés</span>
+      </div>
+      <div class="stat-card stat-avg">
+        <span class="stat-value">{{ historyStats.avgScore }}</span>
+        <span class="stat-label">Score moyen</span>
+      </div>
+    </div>
+
+    <!-- History List -->
+    <div class="card history-card">
+      <div class="history-header">
+        <h2>📚 Historique des simulations</h2>
+        <div class="history-actions">
+          <div class="search-box">
+            <input type="text" 
+                   [(ngModel)]="searchQuery" 
+                   (input)="searchHistory()"
+                   placeholder="🔍 Rechercher un client...">
+          </div>
+          <button class="btn-secondary btn-small" (click)="newAnalysis()">
+            ✨ Nouvelle analyse
+          </button>
+          <button class="btn-danger btn-small" (click)="clearAllHistory()" *ngIf="historyRecords.length > 0">
+            🗑️ Tout effacer
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="historyRecords.length === 0">
+        <span class="empty-icon">📭</span>
+        <p>Aucune simulation enregistrée</p>
+        <button class="btn-primary" (click)="newAnalysis()">
+          Créer une simulation
+        </button>
+      </div>
+
+      <!-- Records List -->
+      <div class="records-list" *ngIf="historyRecords.length > 0">
+        <div class="record-item" 
+             *ngFor="let record of historyRecords"
+             (click)="viewRecord(record)"
+             [class.selected]="selectedRecord?.id === record.id">
+          <div class="record-main">
+            <div class="record-client">
+              <span class="client-name">{{ record.client.firstName }} {{ record.client.name }}</span>
+              <span class="record-date">{{ formatDate(record.date) }}</span>
+            </div>
+            <div class="record-result">
+              <span class="record-score" 
+                    [class.score-good]="record.result.score >= 75"
+                    [class.score-medium]="record.result.score >= 55 && record.result.score < 75"
+                    [class.score-bad]="record.result.score < 55">
+                {{ record.result.score }}/100
+              </span>
+              <span class="record-decision" [class]="'decision-' + record.result.decision">
+                {{ getDecisionBadge(record.result.decision) }}
+              </span>
+            </div>
+          </div>
+          <button class="btn-delete" (click)="deleteRecord(record.id, $event)" title="Supprimer">
+            🗑️
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Record Detail Modal -->
+    <div class="modal-overlay" *ngIf="selectedRecord" (click)="closeRecordDetail()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="closeRecordDetail()">✕</button>
+        
+        <div class="modal-header">
+          <h3>📋 Détail de la simulation</h3>
+          <span class="modal-date">{{ formatDate(selectedRecord.date) }}</span>
+        </div>
+
+        <div class="modal-body">
+          <!-- Client Info -->
+          <div class="detail-section">
+            <h4>👤 Client</h4>
+            <div class="detail-grid">
+              <div><strong>Nom:</strong> {{ selectedRecord.client.firstName }} {{ selectedRecord.client.name }}</div>
+              <div *ngIf="selectedRecord.client.phone"><strong>Tél:</strong> {{ selectedRecord.client.phone }}</div>
+              <div *ngIf="selectedRecord.client.email"><strong>Email:</strong> {{ selectedRecord.client.email }}</div>
+            </div>
+          </div>
+
+          <!-- Result -->
+          <div class="detail-section">
+            <h4>📊 Résultat</h4>
+            <div class="result-summary">
+              <div class="summary-score" [class]="'decision-' + selectedRecord.result.decision">
+                <span class="big-score">{{ selectedRecord.result.score }}</span>
+                <span class="score-label">/100</span>
+              </div>
+              <div class="summary-metrics">
+                <div class="summary-metric">
+                  <span class="metric-label">Décision</span>
+                  <span class="metric-value">{{ getDecisionBadge(selectedRecord.result.decision) }}</span>
+                </div>
+                <div class="summary-metric">
+                  <span class="metric-label">Endettement</span>
+                  <span class="metric-value">{{ selectedRecord.result.tauxEndettement }}%</span>
+                </div>
+                <div class="summary-metric">
+                  <span class="metric-label">Reste à vivre</span>
+                  <span class="metric-value">{{ selectedRecord.result.resteAVivre }} €</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alerts -->
+          <div class="detail-section" *ngIf="selectedRecord.result.motifs.length > 0">
+            <h4>⚠️ Points d'attention</h4>
+            <ul class="detail-alerts">
+              <li *ngFor="let motif of selectedRecord.result.motifs">{{ motif }}</li>
+            </ul>
+          </div>
+
+          <!-- Gestionnaire -->
+          <div class="detail-footer">
+            <span>Analysé par: <strong>{{ selectedRecord.gestionnaire }}</strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

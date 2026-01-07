@@ -1,0 +1,248 @@
+{
+  "demographic": [
+    {
+      "feature": "var_6",
+      "var_index": 6,
+      "importance": 0.22495363397558882,
+      "category": "D\u00e9mographique",
+      "label": "Situation familiale/\u00c2ge",
+      "input_type": "select",
+      "min": 2.3473,
+      "max": 8.4477,
+      "mean": 5.4089486815,
+      "std": 0.8666072662169011
+    },
+    {
+      "feature": "var_12",
+      "var_index": 12,
+      "importance": 0.21786230984497892,
+      "category": "D\u00e9mographique",
+      "label": "Situation familiale/\u00c2ge",
+      "input_type": "select",
+      "min": 13.4346,
+      "max": 14.6545,
+      "mean": 14.0239777985,
+      "std": 0.1900592330753857
+    },
+    {
+      "feature": "var_53",
+      "var_index": 53,
+      "importance": 0.21310309941139002,
+      "category": "D\u00e9mographique",
+      "label": "Statut emploi/Formation",
+      "input_type": "select",
+      "min": 3.3449,
+      "max": 8.2315,
+      "mean": 6.0085688,
+      "std": 0.7647529817394473
+    },
+    {
+      "feature": "var_99",
+      "var_index": 99,
+      "importance": 0.19438552980130688,
+      "category": "D\u00e9mographique",
+      "label": "Statut emploi/Formation",
+      "input_type": "select",
+      "min": -7.2806,
+      "max": 5.0764,
+      "mean": -0.7462960344999999,
+      "std": 1.8625496145558535
+    },
+    {
+      "feature": "var_34",
+      "var_index": 34,
+      "importance": 0.18663782126991246,
+      "category": "D\u00e9mographique",
+      "label": "Situation familiale/\u00c2ge",
+      "input_type": "select",
+      "min": 9.8169,
+      "max": 13.2878,
+      "mean": 11.434249708,
+      "std": 0.5416141965490789
+    },
+    {
+      "feature": "var_166",
+      "var_index": 166,
+      "importance": 0.17842686572319985,
+      "category": "D\u00e9mographique",
+      "label": "Statut emploi/Formation",
+      "input_type": "select",
+      "min": 1.8512,
+      "max": 4.2204,
+      "mean": 2.9633350695000003,
+      "std": 0.36968448363147105
+    },
+    {
+      "feature": "var_133",
+      "var_index": 133,
+      "importance": 0.1748753991325559,
+      "category": "D\u00e9mographique",
+      "label": "Statut emploi/Formation",
+      "input_type": "select",
+      "min": 5.3593,
+      "max": 8.3091,
+      "mean": 6.813270463,
+      "std": 0.37560349529043785
+    }
+  ],
+  "financial": [
+    {
+      "feature": "var_139",
+      "var_index": 139,
+      "importance": 0.24123113854395545,
+      "category": "Financier",
+      "label": "Montant/Solde",
+      "input_type": "number",
+      "min": -21.2743,
+      "max": 36.0971,
+      "mean": 7.760193281,
+      "std": 7.686433041484962
+    },
+    {
+      "feature": "var_76",
+      "var_index": 76,
+      "importance": 0.215319758479827,
+      "category": "Financier",
+      "label": "Montant/Solde",
+      "input_type": "number",
+      "min": -21.6333,
+      "max": 34.4352,
+      "mean": 6.050871454,
+      "std": 7.938351253194238
+    },
+    {
+      "feature": "var_26",
+      "var_index": 26,
+      "importance": 0.20197447128497992,
+      "category": "Financier",
+      "label": "Ratio financier",
+      "input_type": "range",
+      "min": -24.2431,
+      "max": 15.6751,
+      "mean": -4.055133277,
+      "std": 5.922209781187779
+    },
+    {
+      "feature": "var_174",
+      "var_index": 174,
+      "importance": 0.1987979469390029,
+      "category": "Financier",
+      "label": "Montant/Solde",
+      "input_type": "number",
+      "min": -2.9953,
+      "max": 43.5468,
+      "mean": 20.210676787999997,
+      "std": 7.136426608066088
+    },
+    {
+      "feature": "var_21",
+      "var_index": 21,
+      "importance": 0.19165176853392346,
+      "category": "Financier",
+      "label": "Montant/Solde",
+      "input_type": "number",
+      "min": -10.089,
+      "max": 49.0443,
+      "mean": 17.257882793,
+      "std": 8.196563646022815
+    },
+    {
+      "feature": "var_80",
+      "var_index": 80,
+      "importance": 0.18047876213633188,
+      "category": "Financier",
+      "label": "Montant/Solde",
+      "input_type": "number",
+      "min": -18.0422,
+      "max": 30.4769,
+      "mean": 5.795043557,
+      "std": 7.4367367646596865
+    }
+  ],
+  "history": [
+    {
+      "feature": "var_81",
+      "var_index": 81,
+      "importance": 0.2628928915926758,
+      "category": "Historique",
+      "label": "Historique bancaire/Cr\u00e9dit",
+      "input_type": "range",
+      "min": 7.5865,
+      "max": 23.1324,
+      "mean": 14.719023858500002,
+      "std": 2.299567114776453
+    },
+    {
+      "feature": "var_110",
+      "var_index": 110,
+      "importance": 0.2088133894270754,
+      "category": "Historique",
+      "label": "Historique bancaire/Cr\u00e9dit",
+      "input_type": "range",
+      "min": -9.2398,
+      "max": 19.5193,
+      "mean": 5.5132380009999995,
+      "std": 3.823253499306621
+    },
+    {
+      "feature": "var_146",
+      "var_index": 146,
+      "importance": 0.20473030652272392,
+      "category": "Historique",
+      "label": "Historique bancaire/Cr\u00e9dit",
+      "input_type": "range",
+      "min": 0.4274,
+      "max": 20.4373,
+      "mean": 10.3411778935,
+      "std": 2.5188830594002747
+    },
+    {
+      "feature": "var_22",
+      "var_index": 22,
+      "importance": 0.20022544022718944,
+      "category": "Historique",
+      "label": "Historique bancaire/Cr\u00e9dit",
+      "input_type": "range",
+      "min": -5.3225,
+      "max": 14.5945,
+      "mean": 4.3054304705,
+      "std": 2.8479579398264883
+    },
+    {
+      "feature": "var_190",
+      "var_index": 190,
+      "importance": 0.18956823584273566,
+      "category": "Historique",
+      "label": "Historique bancaire/Cr\u00e9dit",
+      "input_type": "range",
+      "min": -14.0933,
+      "max": 18.4409,
+      "mean": 3.234439776,
+      "std": 4.5599216799107305
+    },
+    {
+      "feature": "var_13",
+      "var_index": 13,
+      "importance": 0.18198348643892345,
+      "category": "Historique",
+      "label": "Historique bancaire/Cr\u00e9dit",
+      "input_type": "range",
+      "min": -6.0111,
+      "max": 22.3315,
+      "mean": 8.530232379000001,
+      "std": 4.639535502007197
+    },
+    {
+      "feature": "var_2",
+      "var_index": 2,
+      "importance": 0.17304949117617274,
+      "category": "Historique",
+      "label": "Historique bancaire/Cr\u00e9dit",
+      "input_type": "range",
+      "min": 2.1171,
+      "max": 19.353,
+      "mean": 10.715191850999998,
+      "std": 2.6408941917999016
+    }
+  ]
+}

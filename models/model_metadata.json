@@ -1,0 +1,22 @@
+{
+  "model_type": "LGBMClassifier",
+  "roc_auc_score": 0.8823155207840729,
+  "n_features": 200,
+  "scoring_transform": {
+    "p_min": 0.0061247028623210645,
+    "p_max": 0.7238375044768606,
+    "formula": "score = ((prob - p_min) / (p_max - p_min)) * 100"
+  },
+  "score_distribution": {
+    "accepted_median": 52.894808564105844,
+    "rejected_median": 5.179302326211984,
+    "accepted_p25": 29.707878553673048,
+    "accepted_p75": 79.06450395640282
+  },
+  "recommended_thresholds": {
+    "very_strict": 70,
+    "strict": 60,
+    "normal": 50,
+    "lenient": 40
+  }
+}
