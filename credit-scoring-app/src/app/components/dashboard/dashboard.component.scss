@@ -1551,3 +1551,108 @@
     color: rgba(255, 255, 255, 0.8);
   }
 }
+
+// ===== LOADING STATE =====
+.loading-card {
+  text-align: center;
+  padding: 60px 40px;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  
+  .spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  h2 {
+    color: white;
+    font-size: 24px;
+    margin: 0;
+  }
+  
+  p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+    margin: 0;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ===== API ERROR BANNER =====
+.api-error-banner {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(234, 88, 12, 0.2) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 12px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  color: #fbbf24;
+  font-weight: 500;
+  text-align: center;
+}
+
+// ===== ML CARD =====
+.ml-card {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  
+  h3 {
+    color: #60a5fa;
+    margin-bottom: 20px;
+  }
+}
+
+.ml-info {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  margin-bottom: 16px;
+  
+  @media (max-width: 500px) {
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+}
+
+.ml-metric {
+  text-align: center;
+  
+  .ml-value {
+    display: block;
+    font-size: 36px;
+    font-weight: 800;
+    color: #60a5fa;
+    margin-bottom: 4px;
+    
+    &.confidence-high { color: #34d399; }
+    &.confidence-medium { color: #fbbf24; }
+    &.confidence-low { color: #f87171; }
+  }
+  
+  .ml-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+  }
+}
+
+.ml-description {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}

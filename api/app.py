@@ -11,9 +11,10 @@ import os
 app = Flask(__name__)
 CORS(app)  # Permettre les requêtes cross-origin
 
-# Charger le modèle et le scaler au démarrage
-MODEL_PATH = '../models/best_model.pkl'
-SCALER_PATH = '../models/scaler.pkl'
+# Chemins des modèles (compatible local et Render)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.environ.get('MODEL_PATH', os.path.join(BASE_DIR, '..', 'models', 'best_model.pkl'))
+SCALER_PATH = os.environ.get('SCALER_PATH', os.path.join(BASE_DIR, '..', 'models', 'scaler.pkl'))
 
 model = None
 scaler = None
@@ -320,8 +321,10 @@ def predict_batch():
             'error': f'Erreur: {str(e)}'
         }), 500
 
+# Charger le modèle au démarrage
+load_model()
+
 if __name__ == '__main__':
-    load_model()
     print("\n🚀 Démarrage de l'API Flask...")
     print("📍 API disponible sur: http://localhost:5001")
     print("\n📋 Endpoints disponibles:")
@@ -332,4 +335,5 @@ if __name__ == '__main__':
     print("   POST /predict_batch - Prédictions multiples")
     print("\n⏹️  Ctrl+C pour arrêter\n")
     
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    port = int(os.environ.get('PORT', 5001))
+    app.run(debug=False, host='0.0.0.0', port=port)

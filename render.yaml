@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: credit-scoring-api
+    env: python
+    region: frankfurt
+    buildCommand: pip install -r api/requirements.txt
+    startCommand: cd api && gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: MODEL_PATH
+        value: /opt/render/project/src/models/best_model.pkl
+      - key: SCALER_PATH
+        value: /opt/render/project/src/models/scaler.pkl
+      - key: PYTHON_VERSION
+        value: 3.11.0

@@ -138,7 +138,23 @@
   </div>
 
   <!-- ==================== STEP 3: Results ==================== -->
-  <div class="step-container results" *ngIf="currentStep === 'results' && result">
+  <!-- Loading State -->
+  <div class="step-container" *ngIf="isAnalyzing">
+    <div class="card loading-card">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <h2>🤖 Analyse en cours...</h2>
+        <p>Le modèle ML évalue le profil du client</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-container results" *ngIf="currentStep === 'results' && result && !isAnalyzing">
+    
+    <!-- API Error Banner -->
+    <div class="api-error-banner" *ngIf="apiError">
+      ⚠️ {{ apiError }}
+    </div>
     
     <!-- Main Decision Card -->
     <div class="card result-card" [class]="getDecisionClass()">
@@ -157,6 +173,24 @@
         <div class="score-label">Score de solvabilité</div>
         <div class="threshold-info">🎯 Seuil d'acceptation : {{ threshold }}/100</div>
       </div>
+    </div>
+
+    <!-- ML Model Info -->
+    <div class="card ml-card" *ngIf="result.mlProbability !== undefined">
+      <h3>🤖 Analyse Machine Learning</h3>
+      <div class="ml-info">
+        <div class="ml-metric">
+          <span class="ml-value">{{ result.mlProbability }}%</span>
+          <span class="ml-label">Probabilité ML</span>
+        </div>
+        <div class="ml-metric">
+          <span class="ml-value confidence-{{ result.mlConfidence?.toLowerCase() }}">{{ result.mlConfidence }}</span>
+          <span class="ml-label">Niveau de confiance</span>
+        </div>
+      </div>
+      <p class="ml-description">
+        Le modèle a analysé 200 variables pour calculer la probabilité d'acceptation.
+      </p>
     </div>
 
     <!-- Financial Metrics -->
@@ -180,32 +214,8 @@
       </div>
     </div>
 
-    <!-- Category Details -->
-    <div class="card details-card">
-      <h3>📈 Analyse par catégorie</h3>
-      <div class="category-scores">
-        <div class="category-score" *ngFor="let detail of result.details">
-          <div class="category-info">
-            <span class="category-icon">{{ getCategoryIcon(detail.category) }}</span>
-            <span class="category-name">{{ detail.category }}</span>
-          </div>
-          <div class="category-bar">
-            <div class="category-fill" 
-                 [style.width.%]="(detail.points / detail.maxPoints) * 100"
-                 [class.good]="detail.points / detail.maxPoints >= 0.7"
-                 [class.medium]="detail.points / detail.maxPoints >= 0.4 && detail.points / detail.maxPoints < 0.7"
-                 [class.bad]="detail.points / detail.maxPoints < 0.4">
-            </div>
-          </div>
-          <span class="category-score-text">
-            {{ detail.points | number:'1.1-1' }}/{{ detail.maxPoints }}
-          </span>
-        </div>
-      </div>
-    </div>
-
     <!-- Alerts if any -->
-    <div class="card alerts-card" *ngIf="result.motifs.length > 0">
+    <div class="card alerts-card" *ngIf="result.motifs && result.motifs.length > 0">
       <h3>⚠️ Points d'attention</h3>
       <ul class="alerts-list">
         <li *ngFor="let motif of result.motifs">{{ motif }}</li>
