@@ -59,6 +59,50 @@
                  placeholder="ex: jean.dupont@email.com">
         </div>
       </div>
+    </div>
+
+    <!-- Threshold Configuration Card -->
+    <div class="card threshold-card">
+      <h2>🎯 Seuil d'acceptation</h2>
+      <p class="subtitle">Définissez le score minimum requis pour l'acceptation du crédit</p>
+      
+      <div class="threshold-control">
+        <div class="threshold-display">
+          <span class="threshold-value" [class.low]="threshold < 60" [class.medium]="threshold >= 60 && threshold < 80" [class.high]="threshold >= 80">
+            {{ threshold }}
+          </span>
+          <span class="threshold-max">/100</span>
+        </div>
+        
+        <div class="threshold-slider-container">
+          <input type="range" 
+                 class="threshold-slider"
+                 [(ngModel)]="threshold" 
+                 min="50" 
+                 max="95" 
+                 step="5">
+          <div class="threshold-labels">
+            <span>50 (Souple)</span>
+            <span>75 (Standard)</span>
+            <span>95 (Strict)</span>
+          </div>
+        </div>
+        
+        <div class="threshold-description">
+          <div class="threshold-info" *ngIf="threshold < 60">
+            <span class="threshold-icon">🟢</span>
+            <span>Politique <strong>souple</strong> : Accepte plus de dossiers, risque plus élevé</span>
+          </div>
+          <div class="threshold-info" *ngIf="threshold >= 60 && threshold < 80">
+            <span class="threshold-icon">🟡</span>
+            <span>Politique <strong>standard</strong> : Équilibre entre risque et opportunité</span>
+          </div>
+          <div class="threshold-info" *ngIf="threshold >= 80">
+            <span class="threshold-icon">🔴</span>
+            <span>Politique <strong>stricte</strong> : Moins de dossiers acceptés, risque minimal</span>
+          </div>
+        </div>
+      </div>
       
       <div class="form-actions">
         <button class="btn-primary" (click)="goToQuestions()">
