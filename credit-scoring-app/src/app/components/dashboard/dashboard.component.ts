@@ -303,58 +303,51 @@ export class DashboardComponent implements OnInit {
     });
   }
   
-  // Calcul du score final basé principalement sur les métriques financières réelles
+  // Calcul du score final - équilibré pour permettre des acceptations réalistes
   private calculateFinalScore(mlProbability: number, metrics: { tauxEndettement: number; resteAVivre: number }): number {
-    let score = 0;
+    let score = 20; // Score de base pour tout dossier complet
     
-    // === TAUX D'ENDETTEMENT (40 points max) ===
-    // C'est le critère le plus important
+    // === TAUX D'ENDETTEMENT (35 points max) ===
     if (metrics.tauxEndettement <= 20) {
-      score += 40; // Excellent
-    } else if (metrics.tauxEndettement <= 25) {
-      score += 35; // Très bon
-    } else if (metrics.tauxEndettement <= 33) {
-      score += 28; // Bon (limite légale ~35%)
+      score += 35; // Excellent
+    } else if (metrics.tauxEndettement <= 28) {
+      score += 30; // Très bon
+    } else if (metrics.tauxEndettement <= 35) {
+      score += 25; // Bon (limite légale)
     } else if (metrics.tauxEndettement <= 40) {
-      score += 15; // Risqué
+      score += 15; // Acceptable
     } else if (metrics.tauxEndettement <= 50) {
-      score += 5; // Très risqué
+      score += 5; // Risqué
     } else {
-      score += 0; // Inacceptable
+      score -= 10; // Surendettement
     }
     
-    // === RESTE À VIVRE (35 points max) ===
-    // Combien reste-t-il pour vivre après toutes les charges
-    if (metrics.resteAVivre >= 2000) {
-      score += 35; // Excellent
-    } else if (metrics.resteAVivre >= 1500) {
-      score += 30; // Très bon
+    // === RESTE À VIVRE (30 points max) ===
+    if (metrics.resteAVivre >= 1500) {
+      score += 30; // Excellent
     } else if (metrics.resteAVivre >= 1000) {
-      score += 22; // Correct
-    } else if (metrics.resteAVivre >= 500) {
-      score += 12; // Limite
-    } else if (metrics.resteAVivre >= 200) {
-      score += 5; // Très juste
+      score += 25; // Très bon
+    } else if (metrics.resteAVivre >= 700) {
+      score += 20; // Bon
+    } else if (metrics.resteAVivre >= 400) {
+      score += 12; // Acceptable
+    } else if (metrics.resteAVivre >= 100) {
+      score += 5; // Limite
     } else if (metrics.resteAVivre >= 0) {
       score += 0; // Aucune marge
     } else {
-      score -= 10; // Négatif = malus
+      score -= 15; // Négatif = malus
     }
     
-    // === CONTRIBUTION ML (25 points max) ===
-    // Le ML apporte une contribution modérée
-    score += (mlProbability / 100) * 25;
+    // === CONTRIBUTION ML (15 points max) ===
+    score += (mlProbability / 100) * 15;
     
-    // === MALUS CRITIQUES ===
-    // Pénalités sévères pour les situations critiques
+    // === MALUS pour situations vraiment critiques ===
     if (metrics.tauxEndettement > 50) {
-      score -= 20; // Surendettement
+      score -= 15; // Surendettement sévère
     }
     if (metrics.resteAVivre < 0) {
-      score -= 25; // Déficit budgétaire
-    }
-    if (metrics.resteAVivre < 300 && metrics.tauxEndettement > 40) {
-      score -= 15; // Cumul de risques
+      score -= 20; // Déficit budgétaire
     }
     
     // Borner le score entre 0 et 100
@@ -369,40 +362,24 @@ export class DashboardComponent implements OnInit {
   
   // Calculer un score basé uniquement sur les métriques financières (pour comparer avec ML)
   private getMetricsScore(metrics: { tauxEndettement: number; resteAVivre: number }): number {
-    let score = 0; // Commence à 0, pas de base
-    
-    // Récupération des données pour l'épargne et la stabilité
-    const epargne = this.answers['epargne'] || 0;
-    const typeContrat = this.answers['type_contrat'] || 0;
-    const anciennete = this.answers['anciennete_emploi'] || 0;
+    let score = 20; // Score de base
     
     // Taux d'endettement (35 points max)
-    if (metrics.tauxEndettement <= 25) score += 35;
-    else if (metrics.tauxEndettement <= 33) score += 28;
+    if (metrics.tauxEndettement <= 20) score += 35;
+    else if (metrics.tauxEndettement <= 28) score += 30;
+    else if (metrics.tauxEndettement <= 35) score += 25;
     else if (metrics.tauxEndettement <= 40) score += 15;
     else if (metrics.tauxEndettement <= 50) score += 5;
-    else score -= 20;
+    else score -= 10;
     
-    // Reste à vivre (35 points max)
-    if (metrics.resteAVivre >= 2000) score += 35;
-    else if (metrics.resteAVivre >= 1500) score += 28;
-    else if (metrics.resteAVivre >= 1000) score += 20;
-    else if (metrics.resteAVivre >= 500) score += 10;
+    // Reste à vivre (30 points max)
+    if (metrics.resteAVivre >= 1500) score += 30;
+    else if (metrics.resteAVivre >= 1000) score += 25;
+    else if (metrics.resteAVivre >= 700) score += 20;
+    else if (metrics.resteAVivre >= 400) score += 12;
+    else if (metrics.resteAVivre >= 100) score += 5;
     else if (metrics.resteAVivre >= 0) score += 0;
-    else score -= 25;
-    
-    // Épargne (15 points max)
-    if (epargne >= 50000) score += 15;
-    else if (epargne >= 20000) score += 12;
-    else if (epargne >= 5000) score += 8;
-    else if (epargne >= 1000) score += 4;
-    
-    // Stabilité (15 points max)
-    const stability = typeContrat + anciennete;
-    if (stability >= 180) score += 15;
-    else if (stability >= 150) score += 12;
-    else if (stability >= 100) score += 8;
-    else score += 3;
+    else score -= 15;
     
     return Math.max(0, Math.min(100, score));
   }
@@ -435,15 +412,18 @@ export class DashboardComponent implements OnInit {
       return;
     }
     
-    let score = 0;
+    let score = 20; // Score de base pour dossier complet
     
     // Taux d'endettement (35 points max)
-    if (metrics.tauxEndettement <= 25) {
+    if (metrics.tauxEndettement <= 20) {
       score += 35;
-      motifs.push('✅ Taux d\'endettement excellent (≤25%)');
-    } else if (metrics.tauxEndettement <= 33) {
-      score += 28;
-      motifs.push('✅ Taux d\'endettement correct (≤33%)');
+      motifs.push('✅ Taux d\'endettement excellent (≤20%)');
+    } else if (metrics.tauxEndettement <= 28) {
+      score += 30;
+      motifs.push('✅ Taux d\'endettement très bon (≤28%)');
+    } else if (metrics.tauxEndettement <= 35) {
+      score += 25;
+      motifs.push('✅ Taux d\'endettement correct (≤35%)');
     } else if (metrics.tauxEndettement <= 40) {
       score += 15;
       motifs.push('⚠️ Taux d\'endettement élevé (≤40%)');
@@ -451,65 +431,55 @@ export class DashboardComponent implements OnInit {
       score += 5;
       motifs.push('⛔ Taux d\'endettement très élevé (>40%)');
     } else {
-      score -= 20;
+      score -= 10;
       motifs.push('❌ Surendettement critique (>50%)');
     }
     
-    // Reste à vivre (35 points max)
-    if (metrics.resteAVivre >= 2000) {
-      score += 35;
-      motifs.push('✅ Reste à vivre confortable (≥2000€)');
-    } else if (metrics.resteAVivre >= 1500) {
-      score += 28;
-      motifs.push('✅ Reste à vivre correct (≥1500€)');
+    // Reste à vivre (30 points max)
+    if (metrics.resteAVivre >= 1500) {
+      score += 30;
+      motifs.push('✅ Reste à vivre confortable (≥1500€)');
     } else if (metrics.resteAVivre >= 1000) {
+      score += 25;
+      motifs.push('✅ Reste à vivre correct (≥1000€)');
+    } else if (metrics.resteAVivre >= 700) {
       score += 20;
-      motifs.push('⚠️ Reste à vivre limité (≥1000€)');
-    } else if (metrics.resteAVivre >= 500) {
-      score += 10;
-      motifs.push('⚠️ Reste à vivre faible (≥500€)');
+      motifs.push('✅ Reste à vivre acceptable (≥700€)');
+    } else if (metrics.resteAVivre >= 400) {
+      score += 12;
+      motifs.push('⚠️ Reste à vivre limité (≥400€)');
+    } else if (metrics.resteAVivre >= 100) {
+      score += 5;
+      motifs.push('⚠️ Reste à vivre faible (≥100€)');
     } else if (metrics.resteAVivre >= 0) {
       score += 0;
       motifs.push('⛔ Reste à vivre très faible');
     } else {
-      score -= 25;
+      score -= 15;
       motifs.push('❌ Reste à vivre négatif - situation critique');
     }
     
-    // Épargne (15 points max)
-    if (epargne >= 50000) {
-      score += 15;
-      motifs.push('✅ Épargne importante (≥50k€)');
-    } else if (epargne >= 20000) {
-      score += 12;
+    // Épargne (10 points max)
+    if (epargne >= 20000) {
+      score += 10;
     } else if (epargne >= 5000) {
-      score += 8;
+      score += 7;
     } else if (epargne >= 1000) {
       score += 4;
-    } else {
-      motifs.push('⚠️ Épargne insuffisante');
     }
     
-    // Stabilité professionnelle (15 points max)
+    // Stabilité professionnelle (5 points max)
     const stabilityScore = typeContrat + anciennete;
-    if (stabilityScore >= 180) {
-      score += 15;
-      motifs.push('✅ Situation professionnelle stable');
-    } else if (stabilityScore >= 150) {
-      score += 12;
+    if (stabilityScore >= 150) {
+      score += 5;
     } else if (stabilityScore >= 100) {
-      score += 8;
-    } else {
       score += 3;
-      motifs.push('⚠️ Situation professionnelle précaire');
     }
     
-    // Incidents de paiement
+    // Incidents de paiement (malus seulement)
     if (incidents <= 45) {
-      score -= 15;
-      motifs.push('❌ Historique d\'incidents de paiement');
-    } else if (incidents >= 100) {
-      score += 5;
+      score -= 10;
+      motifs.push('⚠️ Historique d\'incidents de paiement');
     }
     
     score = Math.min(100, Math.max(0, score));
