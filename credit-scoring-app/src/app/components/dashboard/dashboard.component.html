@@ -1,7 +1,7 @@
 <div class="dashboard-container">
   <!-- Header -->
   <header class="header">
-    <div class="logo">
+    <div class="logo" (click)="backToHome()" style="cursor: pointer;">
       <span class="logo-icon">🏦</span>
       <h1>Credit Scoring Pro</h1>
     </div>
@@ -30,38 +30,62 @@
 
   <!-- ==================== STEP 1: Client Info ==================== -->
   <div class="step-container" *ngIf="currentStep === 'info'">
-    <div class="card">
-      <h2>📋 Nouveau dossier client</h2>
-      <p class="subtitle">Renseignez les informations du demandeur pour commencer l'analyse</p>
+    <!-- Crédit demandé en premier -->
+    <div class="card credit-config-card">
+      <h2>💳 Crédit demandé</h2>
+      <p class="subtitle">Configurez les paramètres du crédit souhaité par le client</p>
       
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="name">Nom <span class="required">*</span></label>
-          <input type="text" id="name" [(ngModel)]="clientProfile.name" 
-                 placeholder="ex: Dupont" required>
+      <div class="credit-config-grid">
+        <div class="credit-input-group">
+          <label>Montant souhaité</label>
+          <div class="amount-input">
+            <input type="range" [(ngModel)]="creditConfig.montant" 
+                   min="1000" max="500000" step="1000" class="amount-slider">
+            <div class="amount-display">
+              <span class="amount-value">{{ creditConfig.montant | number:'1.0-0' }}</span>
+              <span class="amount-unit">€</span>
+            </div>
+          </div>
+          <div class="amount-range-labels">
+            <span>1 000 €</span>
+            <span>500 000 €</span>
+          </div>
         </div>
         
-        <div class="form-group">
-          <label for="firstName">Prénom <span class="required">*</span></label>
-          <input type="text" id="firstName" [(ngModel)]="clientProfile.firstName" 
-                 placeholder="ex: Jean" required>
+        <div class="credit-input-group">
+          <label>Durée de remboursement</label>
+          <div class="duration-options">
+            <button *ngFor="let opt of dureeOptions" 
+                    class="duration-btn" 
+                    [class.active]="creditConfig.duree === opt.value"
+                    (click)="creditConfig.duree = opt.value">
+              {{ opt.value }} mois
+            </button>
+          </div>
         </div>
         
-        <div class="form-group">
-          <label for="phone">📱 Téléphone</label>
-          <input type="tel" id="phone" [(ngModel)]="clientProfile.phone" 
-                 placeholder="ex: 06 12 34 56 78">
+        <div class="credit-input-group full-width">
+          <label>Objet du crédit</label>
+          <select [(ngModel)]="creditConfig.objet" class="objet-select">
+            <option *ngFor="let opt of objetOptions" [value]="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
         </div>
-        
-        <div class="form-group">
-          <label for="email">📧 Email</label>
-          <input type="email" id="email" [(ngModel)]="clientProfile.email" 
-                 placeholder="ex: jean.dupont@email.com">
+      </div>
+      
+      <div class="mensualite-preview">
+        <div class="mensualite-box">
+          <span class="mensualite-label">Mensualité estimée</span>
+          <span class="mensualite-value">{{ mensualiteEstimee | number:'1.0-0' }} €<small>/mois</small></span>
+        </div>
+        <div class="mensualite-info">
+          <span>💡 Coût total estimé : {{ (mensualiteEstimee * creditConfig.duree) | number:'1.0-0' }} €</span>
         </div>
       </div>
     </div>
 
-    <!-- Threshold Configuration Card -->
+    <!-- Seuil d'acceptation -->
     <div class="card threshold-card">
       <h2>🎯 Seuil d'acceptation</h2>
       <p class="subtitle">Définissez le score minimum requis pour l'acceptation du crédit</p>
@@ -103,8 +127,43 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Informations client -->
+    <div class="card">
+      <h2>📋 Informations du demandeur</h2>
+      <p class="subtitle">Renseignez les coordonnées du client</p>
+      
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="name">Nom <span class="required">*</span></label>
+          <input type="text" id="name" [(ngModel)]="clientProfile.name" 
+                 placeholder="ex: Dupont" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="firstName">Prénom <span class="required">*</span></label>
+          <input type="text" id="firstName" [(ngModel)]="clientProfile.firstName" 
+                 placeholder="ex: Jean" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="phone">📱 Téléphone</label>
+          <input type="tel" id="phone" [(ngModel)]="clientProfile.phone" 
+                 placeholder="ex: 06 12 34 56 78">
+        </div>
+        
+        <div class="form-group">
+          <label for="email">📧 Email</label>
+          <input type="email" id="email" [(ngModel)]="clientProfile.email" 
+                 placeholder="ex: jean.dupont@email.com">
+        </div>
+      </div>
       
       <div class="form-actions">
+        <button class="btn-secondary" (click)="backToHome()">
+          ← Retour
+        </button>
         <button class="btn-primary" (click)="goToQuestions()">
           🚀 Démarrer l'analyse
         </button>
@@ -128,14 +187,11 @@
             </button>
           </div>
           
-          <!-- Explanation tooltip -->
           <div class="explanation-box" *ngIf="showExplanation === q.id">
             <p>{{ q.explanation }}</p>
           </div>
           
-          <!-- Input based on type -->
           <div class="input-wrapper">
-            <!-- Number input -->
             <ng-container *ngIf="q.type === 'number'">
               <div class="number-input">
                 <input type="number" [id]="q.id"
@@ -152,7 +208,6 @@
               </div>
             </ng-container>
             
-            <!-- Select dropdown -->
             <ng-container *ngIf="q.type === 'select'">
               <select [id]="q.id" [(ngModel)]="answers[q.id]">
                 <option [ngValue]="null" disabled>— Sélectionnez une option —</option>
@@ -182,7 +237,6 @@
   </div>
 
   <!-- ==================== STEP 3: Results ==================== -->
-  <!-- Loading State -->
   <div class="step-container" *ngIf="isAnalyzing">
     <div class="card loading-card">
       <div class="loading-spinner">
@@ -195,12 +249,10 @@
 
   <div class="step-container results" *ngIf="currentStep === 'results' && result && !isAnalyzing">
     
-    <!-- API Error Banner -->
     <div class="api-error-banner" *ngIf="apiError">
       ⚠️ {{ apiError }}
     </div>
     
-    <!-- Main Decision Card -->
     <div class="card result-card" [class]="getDecisionClass()">
       <div class="result-header">
         <h2>{{ getDecisionLabel() }}</h2>
@@ -215,29 +267,10 @@
           <span class="score-max">/100</span>
         </div>
         <div class="score-label">Score de solvabilité</div>
-        <div class="threshold-info">🎯 Seuil d'acceptation : {{ threshold }}/100</div>
+        <div class="threshold-info-result">🎯 Seuil d'acceptation : {{ threshold }}/100</div>
       </div>
     </div>
 
-    <!-- ML Model Info -->
-    <div class="card ml-card" *ngIf="result.mlProbability !== undefined">
-      <h3>🤖 Analyse Machine Learning</h3>
-      <div class="ml-info">
-        <div class="ml-metric">
-          <span class="ml-value">{{ result.mlProbability }}%</span>
-          <span class="ml-label">Probabilité ML</span>
-        </div>
-        <div class="ml-metric">
-          <span class="ml-value confidence-{{ result.mlConfidence?.toLowerCase() }}">{{ result.mlConfidence }}</span>
-          <span class="ml-label">Niveau de confiance</span>
-        </div>
-      </div>
-      <p class="ml-description">
-        Le modèle a analysé 200 variables pour calculer la probabilité d'acceptation.
-      </p>
-    </div>
-
-    <!-- Financial Metrics -->
     <div class="card metrics-card">
       <h3>📊 Indicateurs financiers clés</h3>
       <div class="metrics-grid">
@@ -258,7 +291,6 @@
       </div>
     </div>
 
-    <!-- Alerts if any -->
     <div class="card alerts-card" *ngIf="result.motifs && result.motifs.length > 0">
       <h3>⚠️ Points d'attention</h3>
       <ul class="alerts-list">
@@ -266,7 +298,6 @@
       </ul>
     </div>
 
-    <!-- Actions -->
     <div class="result-actions">
       <button class="btn-primary" (click)="newAnalysis()">
         ✨ Nouvelle analyse
@@ -280,7 +311,6 @@
   <!-- ==================== STEP 4: History ==================== -->
   <div class="step-container history-view" *ngIf="currentStep === 'history'">
     
-    <!-- Stats Cards -->
     <div class="stats-grid">
       <div class="stat-card stat-total">
         <span class="stat-value">{{ historyStats.total }}</span>
@@ -300,7 +330,6 @@
       </div>
     </div>
 
-    <!-- History List -->
     <div class="card history-card">
       <div class="history-header">
         <h2>📚 Historique des simulations</h2>
@@ -320,7 +349,6 @@
         </div>
       </div>
 
-      <!-- Empty State -->
       <div class="empty-state" *ngIf="historyRecords.length === 0">
         <span class="empty-icon">📭</span>
         <p>Aucune simulation enregistrée</p>
@@ -329,7 +357,6 @@
         </button>
       </div>
 
-      <!-- Records List -->
       <div class="records-list" *ngIf="historyRecords.length > 0">
         <div class="record-item" 
              *ngFor="let record of historyRecords"
@@ -359,7 +386,6 @@
       </div>
     </div>
 
-    <!-- Record Detail Modal -->
     <div class="modal-overlay" *ngIf="selectedRecord" (click)="closeRecordDetail()">
       <div class="modal-content" (click)="$event.stopPropagation()">
         <button class="modal-close" (click)="closeRecordDetail()">✕</button>
@@ -370,7 +396,6 @@
         </div>
 
         <div class="modal-body">
-          <!-- Client Info -->
           <div class="detail-section">
             <h4>👤 Client</h4>
             <div class="detail-grid">
@@ -380,7 +405,6 @@
             </div>
           </div>
 
-          <!-- Result -->
           <div class="detail-section">
             <h4>📊 Résultat</h4>
             <div class="result-summary">
@@ -405,7 +429,6 @@
             </div>
           </div>
 
-          <!-- Alerts -->
           <div class="detail-section" *ngIf="selectedRecord.result.motifs.length > 0">
             <h4>⚠️ Points d'attention</h4>
             <ul class="detail-alerts">
@@ -413,7 +436,6 @@
             </ul>
           </div>
 
-          <!-- Gestionnaire -->
           <div class="detail-footer">
             <span>Analysé par: <strong>{{ selectedRecord.gestionnaire }}</strong></span>
           </div>

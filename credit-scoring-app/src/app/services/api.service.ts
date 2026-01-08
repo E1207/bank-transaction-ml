@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, retry, timeout, catchError, throwError } from 'rxjs';
 
 export interface PredictionRequest {
   features: number[];
@@ -55,18 +55,47 @@ export class ApiService {
   }
 
   getHealth(): Observable<HealthStatus> {
-    return this.http.get<HealthStatus>(`${this.apiUrl}/health`);
+    return this.http.get<HealthStatus>(`${this.apiUrl}/health`).pipe(
+      timeout(60000), // 60 secondes pour cold start Render
+      retry(2),
+      catchError(err => {
+        console.error('Health check failed:', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   getModelInfo(): Observable<ModelInfo> {
-    return this.http.get<ModelInfo>(`${this.apiUrl}/model-info`);
+    return this.http.get<ModelInfo>(`${this.apiUrl}/model-info`).pipe(
+      timeout(60000),
+      retry(2)
+    );
   }
 
   predict(request: PredictionRequest): Observable<PredictionResponse> {
-    return this.http.post<PredictionResponse>(`${this.apiUrl}/predict`, request);
+    console.log('Calling API:', this.apiUrl + '/predict');
+    return this.http.post<PredictionResponse>(`${this.apiUrl}/predict`, request).pipe(
+      timeout(60000), // 60 secondes pour cold start Render
+      retry(2), // Retry 2 fois en cas d'échec
+      catchError(err => {
+        console.error('Prediction API error:', err);
+        return throwError(() => err);
+      })
+    );
   }
 
   predictWithThreshold(request: PredictionRequest): Observable<PredictionResponse> {
-    return this.http.post<PredictionResponse>(`${this.apiUrl}/predict_with_threshold`, request);
+    return this.http.post<PredictionResponse>(`${this.apiUrl}/predict_with_threshold`, request).pipe(
+      timeout(60000),
+      retry(2)
+    );
+  }
+
+  // Méthode pour "réveiller" l'API (warm up)
+  warmUp(): void {
+    this.http.get(`${this.apiUrl}/health`).subscribe({
+      next: () => console.log('API is warm'),
+      error: () => console.log('API warming up...')
+    });
   }
 }

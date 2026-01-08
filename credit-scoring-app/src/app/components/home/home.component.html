@@ -1,0 +1,137 @@
+<div class="home-container">
+  <!-- Header -->
+  <header class="home-header">
+    <div class="logo">
+      <span class="logo-icon">🏦</span>
+      <h1>Credit Scoring Pro</h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn-login" (click)="goToLogin()">
+        🔐 Connexion
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <div class="hero-badge">✨ Propulsé par Intelligence Artificielle</div>
+      <h1 class="hero-title">Analyse de crédit <span class="gradient-text">intelligente</span></h1>
+      <p class="hero-subtitle">
+        Évaluez instantanément l'éligibilité de vos clients grâce à notre algorithme 
+        de Machine Learning entraîné sur des millions de transactions bancaires.
+      </p>
+      
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-value">98%</span>
+          <span class="stat-label">Précision ML</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">&lt; 30s</span>
+          <span class="stat-label">Temps d'analyse</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">20</span>
+          <span class="stat-label">Critères évalués</span>
+        </div>
+      </div>
+
+      <button class="btn-cta" (click)="startAnalysis()">
+        <span>🚀 Démarrer une analyse</span>
+        <span class="btn-arrow">→</span>
+      </button>
+    </div>
+
+    <div class="hero-visual">
+      <div class="score-preview">
+        <div class="preview-circle">
+          <svg viewBox="0 0 100 100">
+            <defs>
+              <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#10b981"/>
+                <stop offset="100%" style="stop-color:#3b82f6"/>
+              </linearGradient>
+            </defs>
+            <circle cx="50" cy="50" r="45" class="circle-bg"/>
+            <circle cx="50" cy="50" r="45" class="circle-progress"/>
+          </svg>
+          <div class="preview-score">
+            <span class="score-number">78</span>
+            <span class="score-label">Score</span>
+          </div>
+        </div>
+        <div class="preview-decision accepted">✅ Éligible</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="features-section">
+    <h2>Comment ça fonctionne ?</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📝</div>
+        <h3>1. Informations client</h3>
+        <p>Renseignez les coordonnées du demandeur et le montant souhaité</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>2. Questionnaire guidé</h3>
+        <p>20 questions essentielles sur les revenus, charges, épargne et historique</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>3. Analyse ML</h3>
+        <p>Notre modèle analyse 200 variables pour prédire la solvabilité</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✅</div>
+        <h3>4. Décision instantanée</h3>
+        <p>Score détaillé avec recommandation et motifs explicites</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Criteria Section -->
+  <div class="criteria-section">
+    <div class="criteria-card">
+      <h3>🎯 Critères d'analyse</h3>
+      <div class="criteria-list">
+        <div class="criteria-item">
+          <span class="criteria-icon">💰</span>
+          <div class="criteria-info">
+            <strong>Capacité financière</strong>
+            <span>Revenus, charges, taux d'endettement</span>
+          </div>
+        </div>
+        <div class="criteria-item">
+          <span class="criteria-icon">🏠</span>
+          <div class="criteria-info">
+            <strong>Stabilité</strong>
+            <span>Emploi, logement, ancienneté bancaire</span>
+          </div>
+        </div>
+        <div class="criteria-item">
+          <span class="criteria-icon">📈</span>
+          <div class="criteria-info">
+            <strong>Comportement</strong>
+            <span>Historique de crédit, incidents, épargne</span>
+          </div>
+        </div>
+        <div class="criteria-item">
+          <span class="criteria-icon">🎯</span>
+          <div class="criteria-info">
+            <strong>Projet</strong>
+            <span>Nature, montant, durée, garanties</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="home-footer">
+    <p>© 2026 Credit Scoring Pro - Solution d'analyse de crédit par IA</p>
+  </footer>
+</div>

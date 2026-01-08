@@ -33,8 +33,43 @@ export class DashboardComponent implements OnInit {
     email: ''
   };
   
+  // Configuration du crédit (demandé dès le début)
+  creditConfig = {
+    montant: 20000,
+    duree: 60,
+    objet: 90
+  };
+  
   // Configuration
   threshold = CREDIT_THRESHOLD; // 75/100
+  
+  // Options pour le crédit
+  dureeOptions = [
+    { label: '12 mois (1 an)', value: 12 },
+    { label: '24 mois (2 ans)', value: 24 },
+    { label: '36 mois (3 ans)', value: 36 },
+    { label: '48 mois (4 ans)', value: 48 },
+    { label: '60 mois (5 ans)', value: 60 },
+    { label: '72 mois (6 ans)', value: 72 },
+    { label: '84 mois (7 ans)', value: 84 },
+    { label: '96 mois (8 ans)', value: 96 },
+    { label: '120 mois (10 ans)', value: 120 },
+    { label: '180 mois (15 ans)', value: 180 },
+    { label: '240 mois (20 ans)', value: 240 }
+  ];
+  
+  objetOptions = [
+    { label: 'Travaux rénovation énergétique', value: 100 },
+    { label: 'Achat véhicule neuf', value: 95 },
+    { label: 'Travaux amélioration habitat', value: 90 },
+    { label: 'Achat véhicule occasion', value: 85 },
+    { label: 'Études des enfants', value: 85 },
+    { label: 'Équipement maison', value: 75 },
+    { label: 'Événement familial', value: 65 },
+    { label: 'Rachat de crédits', value: 60 },
+    { label: 'Voyage / Loisirs', value: 50 },
+    { label: 'Besoin de trésorerie', value: 40 }
+  ];
   
   // Étape 2: Questions groupées par catégorie
   allQuestions = BANK_QUESTIONS;
@@ -90,11 +125,19 @@ export class DashboardComponent implements OnInit {
     }
     // Initialiser avec les valeurs par défaut
     this.answers = getDefaultAnswers();
+    
+    // Warm-up de l'API (réveil du cold start Render)
+    this.apiService.warmUp();
   }
 
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  // Navigation depuis la landing page
+  startNewAnalysis() {
+    this.currentStep = 'info';
   }
 
   // Navigation entre les étapes
@@ -103,12 +146,30 @@ export class DashboardComponent implements OnInit {
       alert('Veuillez renseigner le nom et prénom du client');
       return;
     }
+    // Synchroniser les valeurs du crédit dans les réponses
+    this.answers['montant_demande'] = this.creditConfig.montant;
+    this.answers['duree_souhaitee'] = this.creditConfig.duree;
+    this.answers['objet_credit'] = this.creditConfig.objet;
+    
     this.currentStep = 'questions';
     this.currentCategoryIndex = 0;
   }
 
   backToInfo() {
     this.currentStep = 'info';
+  }
+  
+  backToHome() {
+    this.router.navigate(['/']);
+  }
+
+  // Calculer la mensualité estimée
+  get mensualiteEstimee(): number {
+    const taux = 0.049; // 4.9% annuel approximatif
+    const mensualites = this.creditConfig.duree;
+    const capital = this.creditConfig.montant;
+    const tauxMensuel = taux / 12;
+    return Math.round(capital * tauxMensuel / (1 - Math.pow(1 + tauxMensuel, -mensualites)));
   }
 
   // Catégorie courante
@@ -174,13 +235,16 @@ export class DashboardComponent implements OnInit {
         // Calculer le score final (combinaison ML + métriques métier)
         let score = this.calculateFinalScore(mlProbability, metrics);
         
-        // Déterminer la décision
+        // Déterminer la décision en utilisant le seuil configurable
         let decision: 'accepte' | 'refuse' | 'a_etudier';
         const motifs: string[] = [];
         
-        if (score >= 75) {
+        // Utiliser le seuil de la jauge (this.threshold)
+        const seuilEtude = Math.max(this.threshold - 20, 40); // Seuil "à étudier" = seuil - 20
+        
+        if (score >= this.threshold) {
           decision = 'accepte';
-        } else if (score >= 55) {
+        } else if (score >= seuilEtude) {
           decision = 'a_etudier';
         } else {
           decision = 'refuse';
@@ -197,14 +261,29 @@ export class DashboardComponent implements OnInit {
           motifs.push('Profil ML à risque');
         }
         
+        // Calculer la contribution ML effective (la partie ML du score sur 60 points max, ramenée à 100)
+        const mlContribution = Math.round((mlProbability * 0.6 / 60) * 100);
+        
+        // Niveau de confiance basé sur la cohérence entre ML et métriques
+        let confidenceLevel: string;
+        const metricsScore = this.getMetricsScore(metrics);
+        const coherence = Math.abs(mlProbability - metricsScore);
+        if (coherence < 20) {
+          confidenceLevel = 'HIGH';
+        } else if (coherence < 40) {
+          confidenceLevel = 'MEDIUM';
+        } else {
+          confidenceLevel = 'LOW';
+        }
+        
         this.result = {
           score,
           decision,
           tauxEndettement: metrics.tauxEndettement,
           resteAVivre: metrics.resteAVivre,
           motifs,
-          mlProbability: Math.round(mlProbability),
-          mlConfidence: response.confidence_level || this.getConfidenceLevel(response.confidence || 50)
+          mlProbability: mlContribution, // Score ML cohérent avec le résultat
+          mlConfidence: confidenceLevel
         };
         
         this.currentStep = 'results';
@@ -224,34 +303,62 @@ export class DashboardComponent implements OnInit {
     });
   }
   
-  // Calcul du score final combinant ML et métriques métier
+  // Calcul du score final basé principalement sur les métriques financières réelles
   private calculateFinalScore(mlProbability: number, metrics: { tauxEndettement: number; resteAVivre: number }): number {
-    // Score de base depuis le ML (60% du poids)
-    let score = mlProbability * 0.6;
+    let score = 0;
     
-    // Bonus/malus basé sur le taux d'endettement (25% du poids)
-    if (metrics.tauxEndettement <= 25) {
-      score += 25;
+    // === TAUX D'ENDETTEMENT (40 points max) ===
+    // C'est le critère le plus important
+    if (metrics.tauxEndettement <= 20) {
+      score += 40; // Excellent
+    } else if (metrics.tauxEndettement <= 25) {
+      score += 35; // Très bon
     } else if (metrics.tauxEndettement <= 33) {
-      score += 20;
+      score += 28; // Bon (limite légale ~35%)
     } else if (metrics.tauxEndettement <= 40) {
-      score += 10;
+      score += 15; // Risqué
+    } else if (metrics.tauxEndettement <= 50) {
+      score += 5; // Très risqué
     } else {
-      score += 0;
+      score += 0; // Inacceptable
     }
     
-    // Bonus/malus basé sur le reste à vivre (15% du poids)
-    if (metrics.resteAVivre >= 1500) {
-      score += 15;
+    // === RESTE À VIVRE (35 points max) ===
+    // Combien reste-t-il pour vivre après toutes les charges
+    if (metrics.resteAVivre >= 2000) {
+      score += 35; // Excellent
+    } else if (metrics.resteAVivre >= 1500) {
+      score += 30; // Très bon
     } else if (metrics.resteAVivre >= 1000) {
-      score += 12;
+      score += 22; // Correct
     } else if (metrics.resteAVivre >= 500) {
-      score += 8;
+      score += 12; // Limite
+    } else if (metrics.resteAVivre >= 200) {
+      score += 5; // Très juste
+    } else if (metrics.resteAVivre >= 0) {
+      score += 0; // Aucune marge
     } else {
-      score += 0;
+      score -= 10; // Négatif = malus
     }
     
-    return Math.min(100, Math.round(score));
+    // === CONTRIBUTION ML (25 points max) ===
+    // Le ML apporte une contribution modérée
+    score += (mlProbability / 100) * 25;
+    
+    // === MALUS CRITIQUES ===
+    // Pénalités sévères pour les situations critiques
+    if (metrics.tauxEndettement > 50) {
+      score -= 20; // Surendettement
+    }
+    if (metrics.resteAVivre < 0) {
+      score -= 25; // Déficit budgétaire
+    }
+    if (metrics.resteAVivre < 300 && metrics.tauxEndettement > 40) {
+      score -= 15; // Cumul de risques
+    }
+    
+    // Borner le score entre 0 et 100
+    return Math.max(0, Math.min(100, Math.round(score)));
   }
   
   private getConfidenceLevel(confidence: number): string {
@@ -260,35 +367,159 @@ export class DashboardComponent implements OnInit {
     return 'LOW';
   }
   
-  // Scoring de secours si l'API est indisponible
-  private fallbackLocalScoring(metrics: { tauxEndettement: number; resteAVivre: number }) {
-    let score = 50; // Score de base
+  // Calculer un score basé uniquement sur les métriques financières (pour comparer avec ML)
+  private getMetricsScore(metrics: { tauxEndettement: number; resteAVivre: number }): number {
+    let score = 0; // Commence à 0, pas de base
     
-    // Ajustements basés sur les métriques financières
-    if (metrics.tauxEndettement <= 25) score += 25;
-    else if (metrics.tauxEndettement <= 33) score += 15;
-    else if (metrics.tauxEndettement <= 40) score += 5;
-    else score -= 15;
-    
-    if (metrics.resteAVivre >= 1500) score += 20;
-    else if (metrics.resteAVivre >= 1000) score += 15;
-    else if (metrics.resteAVivre >= 500) score += 5;
-    else score -= 10;
-    
-    // Ajustements basés sur les réponses
+    // Récupération des données pour l'épargne et la stabilité
+    const epargne = this.answers['epargne'] || 0;
     const typeContrat = this.answers['type_contrat'] || 0;
-    if (typeContrat >= 85) score += 10;
-    else if (typeContrat >= 65) score += 5;
+    const anciennete = this.answers['anciennete_emploi'] || 0;
     
-    const incidents = this.answers['incidents_paiement'] || 0;
-    if (incidents >= 100) score += 5;
-    else if (incidents <= 45) score -= 15;
+    // Taux d'endettement (35 points max)
+    if (metrics.tauxEndettement <= 25) score += 35;
+    else if (metrics.tauxEndettement <= 33) score += 28;
+    else if (metrics.tauxEndettement <= 40) score += 15;
+    else if (metrics.tauxEndettement <= 50) score += 5;
+    else score -= 20;
+    
+    // Reste à vivre (35 points max)
+    if (metrics.resteAVivre >= 2000) score += 35;
+    else if (metrics.resteAVivre >= 1500) score += 28;
+    else if (metrics.resteAVivre >= 1000) score += 20;
+    else if (metrics.resteAVivre >= 500) score += 10;
+    else if (metrics.resteAVivre >= 0) score += 0;
+    else score -= 25;
+    
+    // Épargne (15 points max)
+    if (epargne >= 50000) score += 15;
+    else if (epargne >= 20000) score += 12;
+    else if (epargne >= 5000) score += 8;
+    else if (epargne >= 1000) score += 4;
+    
+    // Stabilité (15 points max)
+    const stability = typeContrat + anciennete;
+    if (stability >= 180) score += 15;
+    else if (stability >= 150) score += 12;
+    else if (stability >= 100) score += 8;
+    else score += 3;
+    
+    return Math.max(0, Math.min(100, score));
+  }
+  
+  // Scoring de secours si l'API est indisponible - utilise la même logique stricte
+  private fallbackLocalScoring(metrics: { tauxEndettement: number; resteAVivre: number }) {
+    const motifs: string[] = ['⚠️ Scoring de secours (API indisponible)'];
+    
+    // Récupération des données du questionnaire
+    const revenus = this.answers['revenus_mensuels'] || 0;
+    const epargne = this.answers['epargne'] || 0;
+    const typeContrat = this.answers['type_contrat'] || 0;
+    const anciennete = this.answers['anciennete_emploi'] || 0;
+    const incidents = this.answers['incidents_paiement'] || 100;
+    
+    // Si pas de revenus = score 0
+    if (revenus <= 0) {
+      motifs.push('❌ Aucun revenu déclaré');
+      this.result = {
+        score: 0,
+        decision: 'refuse',
+        tauxEndettement: metrics.tauxEndettement,
+        resteAVivre: metrics.resteAVivre,
+        motifs,
+        mlProbability: undefined,
+        mlConfidence: undefined
+      };
+      this.currentStep = 'results';
+      this.saveToHistory();
+      return;
+    }
+    
+    let score = 0;
+    
+    // Taux d'endettement (35 points max)
+    if (metrics.tauxEndettement <= 25) {
+      score += 35;
+      motifs.push('✅ Taux d\'endettement excellent (≤25%)');
+    } else if (metrics.tauxEndettement <= 33) {
+      score += 28;
+      motifs.push('✅ Taux d\'endettement correct (≤33%)');
+    } else if (metrics.tauxEndettement <= 40) {
+      score += 15;
+      motifs.push('⚠️ Taux d\'endettement élevé (≤40%)');
+    } else if (metrics.tauxEndettement <= 50) {
+      score += 5;
+      motifs.push('⛔ Taux d\'endettement très élevé (>40%)');
+    } else {
+      score -= 20;
+      motifs.push('❌ Surendettement critique (>50%)');
+    }
+    
+    // Reste à vivre (35 points max)
+    if (metrics.resteAVivre >= 2000) {
+      score += 35;
+      motifs.push('✅ Reste à vivre confortable (≥2000€)');
+    } else if (metrics.resteAVivre >= 1500) {
+      score += 28;
+      motifs.push('✅ Reste à vivre correct (≥1500€)');
+    } else if (metrics.resteAVivre >= 1000) {
+      score += 20;
+      motifs.push('⚠️ Reste à vivre limité (≥1000€)');
+    } else if (metrics.resteAVivre >= 500) {
+      score += 10;
+      motifs.push('⚠️ Reste à vivre faible (≥500€)');
+    } else if (metrics.resteAVivre >= 0) {
+      score += 0;
+      motifs.push('⛔ Reste à vivre très faible');
+    } else {
+      score -= 25;
+      motifs.push('❌ Reste à vivre négatif - situation critique');
+    }
+    
+    // Épargne (15 points max)
+    if (epargne >= 50000) {
+      score += 15;
+      motifs.push('✅ Épargne importante (≥50k€)');
+    } else if (epargne >= 20000) {
+      score += 12;
+    } else if (epargne >= 5000) {
+      score += 8;
+    } else if (epargne >= 1000) {
+      score += 4;
+    } else {
+      motifs.push('⚠️ Épargne insuffisante');
+    }
+    
+    // Stabilité professionnelle (15 points max)
+    const stabilityScore = typeContrat + anciennete;
+    if (stabilityScore >= 180) {
+      score += 15;
+      motifs.push('✅ Situation professionnelle stable');
+    } else if (stabilityScore >= 150) {
+      score += 12;
+    } else if (stabilityScore >= 100) {
+      score += 8;
+    } else {
+      score += 3;
+      motifs.push('⚠️ Situation professionnelle précaire');
+    }
+    
+    // Incidents de paiement
+    if (incidents <= 45) {
+      score -= 15;
+      motifs.push('❌ Historique d\'incidents de paiement');
+    } else if (incidents >= 100) {
+      score += 5;
+    }
     
     score = Math.min(100, Math.max(0, score));
     
+    // Utiliser le seuil configurable
+    const seuilEtude = Math.max(this.threshold - 20, 40);
+    
     let decision: 'accepte' | 'refuse' | 'a_etudier';
-    if (score >= 75) decision = 'accepte';
-    else if (score >= 55) decision = 'a_etudier';
+    if (score >= this.threshold) decision = 'accepte';
+    else if (score >= seuilEtude) decision = 'a_etudier';
     else decision = 'refuse';
     
     this.result = {
@@ -296,7 +527,7 @@ export class DashboardComponent implements OnInit {
       decision,
       tauxEndettement: metrics.tauxEndettement,
       resteAVivre: metrics.resteAVivre,
-      motifs: ['⚠️ Scoring de secours (API indisponible)'],
+      motifs,
       mlProbability: undefined,
       mlConfidence: undefined
     };
@@ -425,8 +656,9 @@ export class DashboardComponent implements OnInit {
 
   getScoreClass(): string {
     if (!this.result) return '';
-    if (this.result.score >= 75) return 'score-excellent';
-    if (this.result.score >= 55) return 'score-moyen';
+    const seuilEtude = Math.max(this.threshold - 20, 40);
+    if (this.result.score >= this.threshold) return 'score-excellent';
+    if (this.result.score >= seuilEtude) return 'score-moyen';
     return 'score-faible';
   }
 
